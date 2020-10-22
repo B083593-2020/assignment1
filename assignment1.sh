@@ -1,10 +1,11 @@
 #!/bin/bash
-	
+set -e 	
 mkdir -p ${HOME}/fastqcRNAseq/
 #Directory made that will contain output of fastqc 
-cd /localdisk/data/BPSM/Assignment1/fastq/
-#fastqc --outdir=${HOME}/fastqcRNAseq/ 216_L8_1.fq.gz  216_L8_2.fq.gz  218_L8_1.fq.gz  218_L8_2.fq.gz  219_L8_1.fq.gz  219_L8_2.fq.gz  220_L8_1.fq.gz  220_L8_2.fq.gz  221_L8_1.fq.gz 221_L8_2.fq.gz  222_L8_1.fq.gz  222_L8_2.fq.gz
-echo Quality check performed on paired-end raw sequence using fastqc
+cd /localdisk/data/BPSM/Assignment1/fastq/fastqc --outdir=${HOME}/fastqcRNAseq/ 216_L8_1.fq.gz  216_L8_2.fq.gz  218_L8_1.fq.gz  218_L8_2.fq.gz  219_L8_1.fq.gz  219_L8_2.fq.gz  220_L8_1.fq.gz  220_L8_2.fq.gz  221_L8_1.fq.gz 221_L8_2.fq.gz  222_L8_1.fq.gz  222_L8_2.fq.gz 
+echo "Quality check performed on paired-end raw sequence using fastqc. View HTML reports in a browser to analyse output."
+
+
 cp /localdisk/data/BPSM/Assignment1/Tbb_genome/Tb927_genome.fasta.gz ~/assignment1/Tb927_genome.fasta.gz
 gunzip -f ~/assignment1/Tb927_genome.fasta.gz
 #Index of Tb927 genome created in preparation of running bowtie2 
@@ -22,5 +23,13 @@ done
 
 #Bedtool run for slender forms
 bedtools multicov -bams ~/assignment1/216sorted_readpairs.bam ~/assignment1/218sorted_readpairs.bam ~/assignment1/219sorted_readpairs.bam -bed /localdisk/data/BPSM/Assignment1/Tbbgenes.bed > ~/assignment1/slendercounts
+
 #Bedtool run for stumpy forms 
 bedtools multicov -bams ~/assignment1/220sorted_readpairs.bam ~/assignment1/221sorted_readpairs.bam ~/assignment1/222sorted_readpairs.bam -bed /localdisk/data/BPSM/Assignment1/Tbbgenes.bed > ~/assignment1/stumpycounts
+
+paste <(cut -f 4 ~/assignment1/slendercounts) <(cut -f 7-9 ~/assignment1/slendercounts) <(cut -f 7-9 ~/assignment1/stumpycounts) | while read -r gene c1 c2 c3 c4 c5 c6
+do
+avg1=$(((c1 + c2 + c3) / 3))
+avg2=$(((c4 + c5 + c6) / 3))
+printf "%s\t%d\t%d\n" "$gene" $avg1 $avg2 >> summarycounts.txt  
+done
